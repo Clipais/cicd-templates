@@ -50,7 +50,13 @@ jobs:
             -backend-config="encrypt=true"
 
       - name: Terraform Plan
-        run: terraform -chdir=infra plan -out=tfplan -var="environment=${{ inputs.environment }}" -var="aws_region=${{ inputs.aws_region }}"
+        run: |
+          VAR_FILE=""
+          if [ -f "infra/inventories/${{ inputs.environment }}.tfvars" ]; then
+            VAR_FILE="-var-file=inventories/${{ inputs.environment }}.tfvars"
+            echo "📦 Variable definitions file found! Injetando: $VAR_FILE"
+          fi
+          terraform -chdir=infra plan -out=tfplan $VAR_FILE -var="environment=${{ inputs.environment }}" -var="aws_region=${{ inputs.aws_region }}"
 
       - name: Terraform Apply
         run: terraform -chdir=infra apply -auto-approve tfplan
